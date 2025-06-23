@@ -13,6 +13,7 @@ db.prepare(`
   CREATE TABLE IF NOT EXISTS results (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp INTEGER,
+    created_at TEXT,
     elapsed INTEGER,
     score INTEGER,
     correct INTEGER,
@@ -24,7 +25,8 @@ db.prepare(`
 db.prepare(`
   CREATE TABLE IF NOT EXISTS visits (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp INTEGER
+    timestamp INTEGER,
+    visited_at TEXT
   )
 `).run();
 
@@ -33,11 +35,12 @@ app.post("/api/results", (req, res) => {
   const { timestamp, elapsed, score, correct, incorrect, missed } = req.body;
 
   try {
+    const createdAt = new Date(timestamp).toISOString().replace("T", " ").split(".")[0];
     const stmt = db.prepare(`
-      INSERT INTO results (timestamp, elapsed, score, correct, incorrect, missed)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO results (timestamp, created_at, elapsed, score, correct, incorrect, missed)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
-    stmt.run(timestamp, elapsed, score, correct, incorrect, JSON.stringify(missed));
+    stmt.run(timestamp, createdAt, elapsed, score, correct, incorrect, JSON.stringify(missed));
 
     res.status(200).json({ success: true });
   } catch (err) {
@@ -61,7 +64,8 @@ app.get("/api/results", (req, res) => {
 app.post("/api/visit", (req, res) => {
   try {
     const timestamp = Date.now();
-    db.prepare("INSERT INTO visits (timestamp) VALUES (?)").run(timestamp);
+    const visitedAt = new Date(timestamp).toISOString().replace("T", " ").split(".")[0];
+    db.prepare("INSERT INTO visits (timestamp, visited_at) VALUES (?, ?)").run(timestamp, visitedAt);
     res.status(200).json({ success: true });
   } catch (err) {
     console.error("Visit insert error:", err);
