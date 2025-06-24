@@ -122,6 +122,17 @@ app.get("/api/visits", (req, res) => {
   }
 });
 
+// ✅ NEW: Get answers
+app.get("/api/answers", (req, res) => {
+  try {
+    const rows = db.prepare("SELECT * FROM answers ORDER BY id DESC").all();
+    res.json(rows);
+  } catch (err) {
+    console.error("Answers fetch error:", err);
+    res.status(500).json({ error: "Failed to retrieve answers" });
+  }
+});
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`API running on port ${PORT}`);
